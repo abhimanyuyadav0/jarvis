@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import chat, face, documents
+from app.api import auth, chat, face, documents
 
 app = FastAPI(
     title="J.A.R.V.I.S. API",
@@ -17,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(face.router, prefix="/api/face", tags=["face"])
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])

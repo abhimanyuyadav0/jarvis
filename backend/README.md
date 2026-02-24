@@ -43,6 +43,11 @@ Server runs at http://localhost:8000
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/api/auth/validate` | POST | Validate face (shape, human, quality) before register |
+| `/api/auth/register-face` | POST | Store face after validation |
+| `/api/auth/register-complete` | POST | Complete registration with name |
+| `/api/auth/register` | POST | One-shot register (legacy) |
+| `/api/auth/login` | POST | Login with face (required) |
 | `/api/chat/message` | POST | Chat with JARVIS (OpenAI) |
 | `/api/face/analyze` | POST | Analyze image for faces |
 | `/api/face/analyze-base64` | POST | Analyze base64 image |

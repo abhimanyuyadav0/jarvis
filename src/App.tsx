@@ -3,7 +3,9 @@ import JarvisOrb from './components/JarvisOrb'
 import ChatPanel from './components/ChatPanel'
 import LeftPanel from './components/LeftPanel'
 import LogsPanel, { type LogEntry } from './components/LogsPanel'
+import AuthScreen from './components/AuthScreen'
 import { useChatMutation, type Message } from './api'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './App.css'
 
 const MOCK_RESPONSES = [
@@ -16,7 +18,10 @@ function formatTime() {
   return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-function App() {
+const useBackend = !!import.meta.env.VITE_API_URL
+
+function MainApp() {
+  const { user, logout } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
@@ -24,7 +29,6 @@ function App() {
   const logIdRef = useRef(0)
 
   const chatMutation = useChatMutation()
-  const useBackend = !!import.meta.env.VITE_API_URL
 
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
     logIdRef.current += 1
@@ -37,8 +41,8 @@ function App() {
   }, [])
 
   useEffect(() => {
-    addLog('system', 'J.A.R.V.I.S. initialized')
-  }, [addLog])
+    addLog('system', `J.A.R.V.I.S. initialized${user ? ` • Welcome, ${user.name}` : ''}`)
+  }, [addLog, user])
 
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim() || chatMutation.isPending) return
@@ -64,7 +68,7 @@ function App() {
       setMessages(m => [...m, { role: 'assistant', content: errMsg }])
       addLog('system', 'Error: API request failed')
     }
-  }, [messages, chatMutation, addLog, useBackend])
+  }, [messages, chatMutation, addLog])
 
   const handleVoiceTranscript = useCallback((transcript: string) => {
     if (transcript.trim()) {
@@ -79,9 +83,15 @@ function App() {
       <header className="header">
         <h1 className="logo">J.A.R.V.I.S.</h1>
         <span className="subtitle">Just A Rather Very Intelligent System</span>
-        <div className="status">
-          <span className="status-dot" />
-          <span>Online</span>
+        <div className="header-right">
+          {user && <span className="user-name">{user.name}</span>}
+          {useBackend && user && (
+            <button onClick={logout} className="logout-btn">Logout</button>
+          )}
+          <div className="status">
+            <span className="status-dot" />
+            <span>Online</span>
+          </div>
         </div>
       </header>
       <main className="main three-column">
@@ -117,4 +127,28 @@ function App() {
   )
 }
 
-export default App
+function App() {
+  const { user, isReady } = useAuth()
+
+  if (!isReady) {
+    return (
+      <div className="app app-loading">
+        <span>Loading...</span>
+      </div>
+    )
+  }
+
+  if (useBackend && !user) {
+    return <AuthScreen />
+  }
+
+  return <MainApp />
+}
+
+export default function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  )
+}
