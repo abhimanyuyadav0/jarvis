@@ -11,7 +11,6 @@ import { useAuth } from '../contexts/AuthContext'
 import './AuthScreen.css'
 
 type Tab = 'login' | 'register'
-type RegisterStep = 'camera' | 'name'
 
 export default function AuthScreen() {
   const [tab, setTab] = useState<Tab>('login')
@@ -19,9 +18,7 @@ export default function AuthScreen() {
   const [error, setError] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
   const [hasStream, setHasStream] = useState(false)
-  const [registerStep, setRegisterStep] = useState<RegisterStep>('camera')
   const [verifiedImage, setVerifiedImage] = useState<string | null>(null)
-  const [pendingUserId, setPendingUserId] = useState<string | null>(null)
   const [validateStatus, setValidateStatus] = useState<string>('')
   const [zoom, setZoom] = useState(1.4)
   const [faceRect, setFaceRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
@@ -29,6 +26,7 @@ export default function AuthScreen() {
   const faceTrackIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const isStoringFaceRef = useRef(false)
 
   const { login } = useAuth()
   const registerFaceMutation = useAuthRegisterFace()
@@ -82,10 +80,12 @@ export default function AuthScreen() {
 
   const runValidation = useCallback(
     async (isLoginFlow: boolean) => {
+      if (isStoringFaceRef.current) return
       const b64 = captureFace()
       if (!b64) return
       try {
         const res = await validateMutation.mutateAsync(b64)
+        if (isStoringFaceRef.current) return
         if (res.valid) {
           if (res.already_registered && res.existing_name) {
             if (isLoginFlow) {
@@ -115,14 +115,12 @@ export default function AuthScreen() {
             } else {
               setValidateStatus('verified')
               setVerifiedImage(b64)
-              if (validateIntervalRef.current) {
-                clearInterval(validateIntervalRef.current)
-                validateIntervalRef.current = null
-              }
+              // Keep interval running for register so we detect when face is lost
             }
           }
         } else {
           setValidateStatus(res.message || 'Verifying...')
+          setVerifiedImage(null)
         }
       } catch {
         setValidateStatus('Verifying...')
@@ -135,7 +133,6 @@ export default function AuthScreen() {
     setError('')
     setValidateStatus('')
     setVerifiedImage(null)
-    setRegisterStep('camera')
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 } },
@@ -181,40 +178,25 @@ export default function AuthScreen() {
     setHasStream(false)
     setValidateStatus('')
     setVerifiedImage(null)
-    setRegisterStep('camera')
   }, [])
 
-  const handleVerifiedContinue = async () => {
-    if (!verifiedImage) return
-    if (validateIntervalRef.current) {
-      clearInterval(validateIntervalRef.current)
-      validateIntervalRef.current = null
-    }
-    setError('')
-    try {
-      const result = await registerFaceMutation.mutateAsync(verifiedImage)
-      setPendingUserId(result.user_id)
-      streamRef.current?.getTracks().forEach((t) => t.stop())
-      streamRef.current = null
-      if (videoRef.current) videoRef.current.srcObject = null
-      setHasStream(false)
-      setRegisterStep('name')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to store face. Try again.')
-    }
-  }
-
   const handleRegisterComplete = async () => {
-    if (!pendingUserId) return
+    const imageToStore = verifiedImage
+    if (!imageToStore) return
+    isStoringFaceRef.current = true
     setError('')
     try {
+      const faceResult = await registerFaceMutation.mutateAsync(imageToStore)
+      if (!faceResult?.user_id) throw new Error('Invalid response')
       const result = await registerCompleteMutation.mutateAsync({
-        userId: pendingUserId,
+        userId: faceResult.user_id,
         name: name.trim() || undefined,
       })
       login(result)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Registration failed')
+    } finally {
+      isStoringFaceRef.current = false
     }
   }
 
@@ -224,8 +206,6 @@ export default function AuthScreen() {
     setError('')
     setValidateStatus('')
     setVerifiedImage(null)
-    setPendingUserId(null)
-    setRegisterStep('camera')
     setPreview(null)
     setName('')
   }
@@ -239,8 +219,7 @@ export default function AuthScreen() {
   const isRegisterCompletePending = registerCompleteMutation.isPending
   const hasFeed = hasStream || preview
 
-  const isRegisterNameStep = tab === 'register' && registerStep === 'name'
-  const isRegisterCameraStep = tab === 'register' && registerStep === 'camera'
+  const isRegisterVerified = tab === 'register' && validateStatus === 'verified' && hasFeed
 
   return (
     <div className="auth-screen">
@@ -250,12 +229,14 @@ export default function AuthScreen() {
 
         <div className="auth-tabs">
           <button
+            type="button"
             className={tab === 'login' ? 'active' : ''}
             onClick={() => handleTabChange('login')}
           >
             Login
           </button>
           <button
+            type="button"
             className={tab === 'register' ? 'active' : ''}
             onClick={() => handleTabChange('register')}
           >
@@ -263,53 +244,7 @@ export default function AuthScreen() {
           </button>
         </div>
 
-        {isRegisterNameStep ? (
-          <>
-            <div className="auth-verified-badge">
-              <span className="auth-verified-icon">✓</span>
-              <span>Face verified and stored</span>
-              {verifiedImage && (
-                <img src={verifiedImage} alt="Verified" className="auth-verified-thumb" />
-              )}
-            </div>
-            <div className="auth-name-field">
-              <label>Your name (optional)</label>
-              <input
-                type="text"
-                placeholder="Enter name or leave blank"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="auth-input"
-              />
-              <span className="auth-name-hint">Leave empty for auto-generated name</span>
-            </div>
-            <button
-              onClick={handleRegisterComplete}
-              disabled={isRegisterCompletePending}
-              className="auth-btn auth-btn-submit"
-            >
-              {isRegisterCompletePending ? (
-                <span className="auth-btn-with-spinner">
-                  <span className="auth-spinner" /> Completing...
-                </span>
-              ) : (
-                'Complete Registration'
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setRegisterStep('camera')
-                setVerifiedImage(null)
-                setPendingUserId(null)
-                startCamera()
-              }}
-              className="auth-btn auth-btn-secondary auth-btn-text"
-            >
-              Retake face
-            </button>
-          </>
-        ) : (
-          <>
+        <>
             <div className="auth-face-area">
               {preview ? (
                 <img src={preview} alt="Face" className="auth-preview" />
@@ -324,7 +259,7 @@ export default function AuthScreen() {
                   <span className="auth-placeholder-hint">Start camera to continue</span>
                 </div>
               )}
-              {hasStream && (tab === 'login' || isRegisterCameraStep) && (
+              {hasStream && (tab === 'login' || tab === 'register') && (
                 <>
                   {validateStatus === 'verified' ? (
                     <div className="auth-face-guide auth-face-guide--verified">
@@ -354,7 +289,7 @@ export default function AuthScreen() {
                   )}
                 </>
               )}
-              {((tab === 'login' && hasStream) || isRegisterCameraStep) && hasStream && validateStatus && (
+              {(tab === 'login' || tab === 'register') && hasStream && validateStatus && (
                 <div
                   className={`auth-validate-overlay ${
                     validateStatus === 'verified' || validateStatus.startsWith('Recognized')
@@ -381,6 +316,7 @@ export default function AuthScreen() {
                 {[1, 1.4, 1.8].map((z) => (
                   <button
                     key={z}
+                    type="button"
                     onClick={() => setZoom(z)}
                     className={`auth-zoom-btn ${zoom === z ? 'active' : ''}`}
                   >
@@ -392,6 +328,7 @@ export default function AuthScreen() {
             <div className="auth-actions">
               {!hasFeed ? (
                 <button
+                  type="button"
                   onClick={startCamera}
                   className="auth-btn auth-btn-primary"
                 >
@@ -403,23 +340,9 @@ export default function AuthScreen() {
                 </span>
               ) : (
                 <>
-                  {validateStatus === 'verified' && (
-                    <button
-                      onClick={handleVerifiedContinue}
-                      disabled={isRegisterFacePending}
-                      className="auth-btn auth-btn-primary"
-                    >
-                      {isRegisterFacePending ? (
-                        <span className="auth-btn-with-spinner">
-                          <span className="auth-spinner" /> Storing face...
-                        </span>
-                      ) : (
-                        'Store Face & Enter Name'
-                      )}
-                    </button>
-                  )}
                   {validateStatus.startsWith('Already registered') && (
                     <button
+                      type="button"
                       onClick={() => handleTabChange('login')}
                       className="auth-btn auth-btn-primary"
                     >
@@ -430,8 +353,39 @@ export default function AuthScreen() {
               )}
             </div>
 
+            {isRegisterVerified && (
+              <div className="auth-register-inline">
+                <div className="auth-name-field">
+                  <label htmlFor="auth-name-input">Your name (optional)</label>
+                  <input
+                    id="auth-name-input"
+                    type="text"
+                    placeholder="Enter name or leave blank"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="auth-input"
+                    autoComplete="off"
+                    aria-label="Your name"
+                  />
+                  <span className="auth-name-hint">Keep your face in frame — complete to finish</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRegisterComplete}
+                  disabled={isRegisterCompletePending || isRegisterFacePending}
+                  className="auth-btn auth-btn-submit"
+                >
+                  {isRegisterCompletePending || isRegisterFacePending ? (
+                    <span className="auth-btn-with-spinner">
+                      <span className="auth-spinner" /> Completing...
+                    </span>
+                  ) : (
+                    'Complete Registration'
+                  )}
+                </button>
+              </div>
+            )}
           </>
-        )}
 
         {error && <p className="auth-error">{error}</p>}
       </div>
