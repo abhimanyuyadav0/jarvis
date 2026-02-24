@@ -27,6 +27,7 @@ function MainApp() {
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [voiceGender, setVoiceGender] = useState<'male' | 'female'>('male')
   const [logs, setLogs] = useState<LogEntry[]>([])
   const logIdRef = useRef(0)
   const startVoiceListeningRef = useRef<(() => void) | null>(null)
@@ -55,6 +56,18 @@ function MainApp() {
     addLog('system', `J.A.R.V.I.S. initialized${user ? ` • Welcome, ${user.name}` : ''}`)
   }, [addLog, user])
 
+  const hasDevanagari = (s: string) => /[\u0900-\u097F]/.test(s)
+
+  const isFemaleVoice = (name: string) => {
+    const n = name.toLowerCase()
+    return /female|woman|zira|samantha|karen|victoria|hilary|moira|kate|fiona|kalyani|heera/.test(n)
+  }
+
+  const filterByGender = (voices: SpeechSynthesisVoice[], gender: 'male' | 'female') =>
+    gender === 'female'
+      ? voices.filter(v => isFemaleVoice(v.name))
+      : voices.filter(v => !isFemaleVoice(v.name))
+
   const speakResponse = useCallback((text: string, onEnd?: () => void) => {
     if (!text.trim() || !('speechSynthesis' in window)) return
     window.speechSynthesis.cancel()
@@ -62,8 +75,15 @@ function MainApp() {
     utterance.rate = 0.95
     utterance.pitch = 1
     utterance.volume = 1
-    const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'))
-    if (voices.length) utterance.voice = voices[0]
+    const voices = window.speechSynthesis.getVoices()
+    const hindiVoices = filterByGender(voices.filter(v => v.lang.startsWith('hi')), voiceGender)
+    const englishVoices = filterByGender(voices.filter(v => v.lang.startsWith('en')), voiceGender)
+    const useHindi = hasDevanagari(text)
+    const candidates = useHindi && hindiVoices.length ? hindiVoices : englishVoices
+    const fallback = useHindi ? voices.find(v => v.lang.startsWith('hi')) : voices.find(v => v.lang.startsWith('en'))
+    const chosen = candidates[0] ?? fallback ?? voices[0]
+    if (chosen) utterance.voice = chosen
+    utterance.lang = useHindi ? 'hi-IN' : 'en-US'
     utterance.onstart = () => setIsSpeaking(true)
     utterance.onend = () => {
       setIsSpeaking(false)
@@ -74,7 +94,7 @@ function MainApp() {
       onEnd?.()
     }
     window.speechSynthesis.speak(utterance)
-  }, [])
+  }, [voiceGender])
 
   const handleSend = useCallback(async (text: string, replyWithVoice = false) => {
     if (!text.trim() || chatMutation.isPending) return
@@ -146,6 +166,8 @@ function MainApp() {
             onTranscript={handleVoiceTranscript}
             startVoiceListeningRef={startVoiceListeningRef}
             cancelSpeakingRef={cancelSpeakingRef}
+            voiceGender={voiceGender}
+            onVoiceGenderChange={setVoiceGender}
             onDocAnswer={(answer) => {
               setMessages(m => [...m, { role: 'assistant', content: `📄 ${answer}` }])
               addLog('assistant', answer.slice(0, 80) + (answer.length > 80 ? '...' : ''))
