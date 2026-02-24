@@ -122,6 +122,13 @@ class AuthService:
         except (ValueError, TypeError):
             return 0.4
 
+    FACE_SIZE = (100, 100)  # Normalized size for consistent matching
+
+    def _normalize_face(self, face_roi: np.ndarray) -> np.ndarray:
+        """Normalize face for robust matching: resize, histogram equalization."""
+        resized = cv2.resize(face_roi, self.FACE_SIZE, interpolation=cv2.INTER_AREA)
+        return cv2.equalizeHist(resized)
+
     def _extract_face_from_image(self, img: np.ndarray) -> "np.ndarray | None":
         """Extract face ROI from full image. Returns grayscale face crop or None."""
         if img is None or img.size == 0:
@@ -133,18 +140,21 @@ class AuthService:
         if len(faces) == 0:
             return None
         x, y, w, h = faces[0]
-        return gray[y : y + h, x : x + w]
+        face_roi = gray[y : y + h, x : x + w]
+        return self._normalize_face(face_roi)
 
     def _match_face(
         self, face_roi: np.ndarray, exclude_user_id: str | None = None, include_pending: bool = False
     ) -> tuple[str | None, float]:
         """Match face against registered users. Returns (user_id, score) or (None, 0).
         include_pending=False: only completed users (for register duplicate check, validate).
-        include_pending=True: all users (for login, so pending registrations can log in)."""
+        include_pending=True: all users (for login, so pending registrations can log in).
+        Uses normalized faces for more robust matching across lighting/angle."""
         users = _load_users()
         best_match = None
         best_score = 0.0
-        target_h, target_w = face_roi.shape[:2]
+        # Normalize input face for consistent comparison
+        query_face = self._normalize_face(face_roi)
         for user_id, user_data in users.items():
             if user_id == exclude_user_id:
                 continue
@@ -159,8 +169,7 @@ class AuthService:
             reg_face = self._extract_face_from_image(reg_full)
             if reg_face is None:
                 continue
-            reg_face = cv2.resize(reg_face, (target_w, target_h))
-            diff = np.mean(np.abs(reg_face.astype(float) - face_roi.astype(float)))
+            diff = np.mean(np.abs(reg_face.astype(float) - query_face.astype(float)))
             score = 1 / (1 + diff)
             if score > best_score:
                 best_score = score

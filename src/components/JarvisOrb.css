@@ -122,3 +122,55 @@
     box-shadow: 0 0 60px var(--jarvis-glow);
   }
 }
+
+/* Speaking state: yellow-orange rings */
+.jarvis-orb.speaking .ring {
+  border-color: #ffaa00;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.6);
+  animation: ring-speak 1.2s ease-in-out infinite;
+}
+
+.jarvis-orb.speaking .ring-2 {
+  animation-delay: 0.2s;
+}
+
+.jarvis-orb.speaking .ring-3 {
+  animation-delay: 0.4s;
+}
+
+.jarvis-orb.speaking .orb-core {
+  animation: core-speak 0.8s ease-in-out infinite;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 180, 80, 0.9),
+    rgba(255, 140, 40, 0.6)
+  );
+  box-shadow: 0 0 40px rgba(255, 170, 0, 0.6), 0 0 60px rgba(255, 120, 0, 0.4);
+}
+
+.jarvis-orb.speaking .orb-glow {
+  background: radial-gradient(
+    circle,
+    rgba(255, 170, 0, 0.2) 0%,
+    rgba(255, 120, 0, 0.08) 40%,
+    transparent 70%
+  );
+}
+
+@keyframes ring-speak {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+    border-color: #ffaa00;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+    border-color: #ff6600;
+  }
+}
+
+@keyframes core-speak {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.95; }
+}

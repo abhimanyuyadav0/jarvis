@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { setAuthToken } from '../api'
 
 const STORAGE_KEY = 'jarvis_user'
 
@@ -33,7 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as AuthUser
-        if (parsed?.token) setUser(parsed)
+        if (parsed?.token) {
+          setUser(parsed)
+          setAuthToken(parsed.token)
+        }
       }
     } finally {
       setIsReady(true)
@@ -43,11 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((u: AuthUser) => {
     setUser(u)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u))
+    setAuthToken(u.token)
   }, [])
 
   const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
+    setAuthToken(null)
   }, [])
 
   return (

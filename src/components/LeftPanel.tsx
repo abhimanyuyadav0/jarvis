@@ -14,9 +14,11 @@ interface LeftPanelProps {
   onListeningChange?: (listening: boolean) => void
   onTranscript?: (text: string) => void
   onDocAnswer?: (answer: string) => void
+  startVoiceListeningRef?: React.MutableRefObject<(() => void) | null>
+  cancelSpeakingRef?: React.MutableRefObject<(() => void) | null>
 }
 
-export default function LeftPanel({ onLog, isListening = false, onListeningChange, onTranscript, onDocAnswer }: LeftPanelProps) {
+export default function LeftPanel({ onLog, isListening = false, onListeningChange, onTranscript, onDocAnswer, startVoiceListeningRef }: LeftPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
@@ -179,6 +181,8 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
             isListening={isListening}
             onListeningChange={onListeningChange}
             onTranscript={onTranscript}
+            startListeningRef={startVoiceListeningRef}
+            cancelSpeakingRef={cancelSpeakingRef}
           />
         )}
       </div>

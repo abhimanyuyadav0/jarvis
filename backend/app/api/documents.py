@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 
+from app.auth.deps import get_current_user
 from app.services.doc_service import doc_service
 
 router = APIRouter()
@@ -11,7 +12,10 @@ class QueryRequest(BaseModel):
 
 
 @router.post("/upload")
-async def upload_document(file: UploadFile):
+async def upload_document(
+    file: UploadFile,
+    current_user: dict = Depends(get_current_user),
+):
     """Upload a document (PDF, TXT, DOCX) for Q&A."""
     ext = file.filename.split(".")[-1].lower() if file.filename else ""
     if ext not in ("pdf", "txt", "docx"):
@@ -28,7 +32,10 @@ async def upload_document(file: UploadFile):
 
 
 @router.post("/query")
-async def query_documents(req: QueryRequest):
+async def query_documents(
+    req: QueryRequest,
+    current_user: dict = Depends(get_current_user),
+):
     """Ask a question about uploaded documents."""
     try:
         result = await doc_service.query(req.question)
@@ -38,7 +45,9 @@ async def query_documents(req: QueryRequest):
 
 
 @router.get("/list")
-async def list_documents():
+async def list_documents(
+    current_user: dict = Depends(get_current_user),
+):
     """List uploaded documents."""
     try:
         docs = await doc_service.list_docs()

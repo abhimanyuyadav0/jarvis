@@ -132,6 +132,7 @@
 
 .panel-center {
   flex: 1;
+  max-height: calc(100vh - 90px);
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -142,6 +143,7 @@
 .panel-right {
   flex-shrink: 0;
   min-width: 0;
+  max-height: calc(100vh - 90px);
 }
 
 @media (min-width: 900px) {

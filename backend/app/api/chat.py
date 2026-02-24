@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.auth.deps import get_current_user
 from app.config import OPENAI_API_KEY
 from app.services.chat_service import chat_service
 
@@ -7,7 +8,10 @@ router = APIRouter()
 
 
 @router.post("/message")
-async def chat_message(messages: list[dict]):
+async def chat_message(
+    messages: list[dict],
+    current_user: dict = Depends(get_current_user),
+):
     """Send messages to JARVIS and get AI response."""
     if not OPENAI_API_KEY:
         raise HTTPException(

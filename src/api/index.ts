@@ -1,4 +1,4 @@
-export { apiClient } from './client'
+export { apiClient, setAuthToken, setOnUnauthorized } from './client'
 export {
   useAuthRegister,
   useAuthRegisterFace,

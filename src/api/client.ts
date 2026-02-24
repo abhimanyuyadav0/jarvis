@@ -1,13 +1,35 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+let authToken: string | null = null
+let onUnauthorized: (() => void) | null = null
+
+export function setAuthToken(token: string | null) {
+  authToken = token
+}
+
+export function setOnUnauthorized(cb: (() => void) | null) {
+  onUnauthorized = cb
+}
+
+function handleUnauthorized(res: Response) {
+  if (res.status === 401 && onUnauthorized) onUnauthorized()
+}
+
+function authHeaders(): Record<string, string> {
+  const h: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (authToken) h['Authorization'] = `Bearer ${authToken}`
+  return h
+}
+
 export const apiClient = {
   async chat(messages: { role: string; content: string }[]) {
     const res = await fetch(`${API_BASE}/api/chat/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(messages),
     })
     if (!res.ok) {
+      handleUnauthorized(res)
       const err = await res.json().catch(() => ({}))
       throw new Error(err.detail || 'Chat failed')
     }
@@ -28,11 +50,15 @@ export const apiClient = {
   async uploadDocument(file: File) {
     const form = new FormData()
     form.append('file', file)
+    const headers: Record<string, string> = {}
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`
     const res = await fetch(`${API_BASE}/api/documents/upload`, {
       method: 'POST',
+      headers,
       body: form,
     })
     if (!res.ok) {
+      handleUnauthorized(res)
       const err = await res.json().catch(() => ({}))
       throw new Error(err.detail || 'Upload failed')
     }
@@ -42,16 +68,24 @@ export const apiClient = {
   async queryDocuments(question: string) {
     const res = await fetch(`${API_BASE}/api/documents/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ question }),
     })
-    if (!res.ok) throw new Error('Query failed')
+    if (!res.ok) {
+      handleUnauthorized(res)
+      throw new Error('Query failed')
+    }
     return res.json()
   },
 
   async listDocuments() {
-    const res = await fetch(`${API_BASE}/api/documents/list`)
-    if (!res.ok) return { documents: [] }
+    const res = await fetch(`${API_BASE}/api/documents/list`, {
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+    })
+    if (!res.ok) {
+      handleUnauthorized(res)
+      return { documents: [] }
+    }
     return res.json()
   },
 

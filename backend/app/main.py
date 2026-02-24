@@ -2,11 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, chat, face, documents
+from app.config import APP_VERSION
 
 app = FastAPI(
     title="J.A.R.V.I.S. API",
     description="Just A Rather Very Intelligent System",
-    version="1.0.0",
+    version=APP_VERSION,
 )
 
 app.add_middleware(

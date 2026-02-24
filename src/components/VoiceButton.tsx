@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import './VoiceButton.css'
 
 declare global {
@@ -12,25 +12,23 @@ interface VoiceButtonProps {
   isListening: boolean
   onListeningChange: (listening: boolean) => void
   onTranscript: (text: string) => void
+  /** Ref to programmatically start listening (for continuous conversation) */
+  startListeningRef?: React.MutableRefObject<(() => void) | null>
+  /** Ref to cancel ongoing speech when user interrupts */
+  cancelSpeakingRef?: React.MutableRefObject<(() => void) | null>
 }
 
-export default function VoiceButton({ isListening, onListeningChange, onTranscript }: VoiceButtonProps) {
+export default function VoiceButton({ isListening, onListeningChange, onTranscript, startListeningRef, cancelSpeakingRef }: VoiceButtonProps) {
   const recognitionRef = useRef<SpeechRecognition | null>(null)
 
-  const toggleListening = useCallback(() => {
-    if (isListening) {
-      recognitionRef.current?.stop()
-      onListeningChange(false)
-      return
-    }
-
+  const startListening = useCallback(() => {
+    cancelSpeakingRef?.current?.()
+    if (isListening) return
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition
-
     if (!SpeechRecognitionClass) {
       onTranscript('Voice recognition is not supported in your browser. Try Chrome or Edge.')
       return
     }
-
     const recognition = new SpeechRecognitionClass()
     recognition.continuous = true
     recognition.interimResults = true
@@ -50,7 +48,30 @@ export default function VoiceButton({ isListening, onListeningChange, onTranscri
     recognition.start()
     recognitionRef.current = recognition
     onListeningChange(true)
-  }, [isListening, onListeningChange, onTranscript])
+  }, [isListening, onListeningChange, onTranscript, cancelSpeakingRef])
+
+  useEffect(() => {
+    startListeningRef && (startListeningRef.current = startListening)
+    return () => {
+      startListeningRef && (startListeningRef.current = null)
+    }
+  }, [startListeningRef, startListening])
+
+  useEffect(() => {
+    if (!isListening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+    }
+  }, [isListening])
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      onListeningChange(false)
+      return
+    }
+    startListening()
+  }, [isListening, onListeningChange, startListening])
 
   return (
     <button

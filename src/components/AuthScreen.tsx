@@ -332,24 +332,32 @@ export default function AuthScreen() {
                   onClick={startCamera}
                   className="auth-btn auth-btn-primary"
                 >
-                  {tab === 'login' ? 'Login' : 'Start Camera'}
+                  {tab === 'login' ? 'Start Camera to Login' : 'Start Camera'}
                 </button>
-              ) : tab === 'login' ? (
-                <span className="auth-status-hint">
-                  Position your face — login happens automatically
-                </span>
               ) : (
                 <>
-                  {validateStatus.startsWith('Already registered') && (
-                    <button
-                      type="button"
-                      onClick={() => handleTabChange('login')}
-                      className="auth-btn auth-btn-primary"
-                    >
-                      Switch to Login
-                    </button>
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="auth-btn auth-btn-secondary"
+                  >
+                    Stop Camera
+                  </button>
+                  {tab === 'login' && (
+                    <span className="auth-status-hint">
+                      Position your face — login happens automatically
+                    </span>
                   )}
                 </>
+              )}
+              {hasFeed && tab === 'register' && validateStatus.startsWith('Already registered') && (
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('login')}
+                  className="auth-btn auth-btn-primary"
+                >
+                  Switch to Login
+                </button>
               )}
             </div>
 
