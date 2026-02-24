@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import type { Message } from '../lib/ai'
+import type { Message } from '../api'
 import './ChatPanel.css'
 
 interface ChatPanelProps {

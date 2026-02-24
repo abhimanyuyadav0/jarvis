@@ -3,8 +3,14 @@ import JarvisOrb from './components/JarvisOrb'
 import ChatPanel from './components/ChatPanel'
 import LeftPanel from './components/LeftPanel'
 import LogsPanel, { type LogEntry } from './components/LogsPanel'
-import { sendMessage, type Message } from './lib/ai'
+import { useChatMutation, type Message } from './api'
 import './App.css'
+
+const MOCK_RESPONSES = [
+  "At your service. How may I assist you today?",
+  "Processing your request. I'm always here to help.",
+  "An excellent question. Allow me to elaborate...",
+]
 
 function formatTime() {
   return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -14,9 +20,11 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isListening, setIsListening] = useState(false)
-  const [isThinking, setIsThinking] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const logIdRef = useRef(0)
+
+  const chatMutation = useChatMutation()
+  const useBackend = !!import.meta.env.VITE_API_URL
 
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
     logIdRef.current += 1
@@ -33,24 +41,30 @@ function App() {
   }, [addLog])
 
   const handleSend = useCallback(async (text: string) => {
-    if (!text.trim() || isThinking) return
+    if (!text.trim() || chatMutation.isPending) return
     const userMsg: Message = { role: 'user', content: text.trim() }
-    setMessages(m => [...m, userMsg])
+    const nextMessages = [...messages, userMsg]
+    setMessages(nextMessages)
     addLog('user', text.trim())
     setInput('')
-    setIsThinking(true)
     try {
-      const response = await sendMessage([...messages, userMsg])
+      let response: string
+      if (useBackend) {
+        response = await chatMutation.mutateAsync(nextMessages)
+      } else {
+        await new Promise(r => setTimeout(r, 600 + Math.random() * 300))
+        const lastUser = nextMessages[nextMessages.length - 1]
+        response = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)] +
+          (lastUser ? ` (You said: "${lastUser.content.slice(0, 40)}...")` : '')
+      }
       setMessages(m => [...m, { role: 'assistant', content: response }])
       addLog('assistant', response.slice(0, 80) + (response.length > 80 ? '...' : ''))
-    } catch (err) {
+    } catch {
       const errMsg = 'I encountered an error. Please check your API key or try again.'
       setMessages(m => [...m, { role: 'assistant', content: errMsg }])
       addLog('system', 'Error: API request failed')
-    } finally {
-      setIsThinking(false)
     }
-  }, [messages, isThinking, addLog])
+  }, [messages, chatMutation, addLog, useBackend])
 
   const handleVoiceTranscript = useCallback((transcript: string) => {
     if (transcript.trim()) {
@@ -85,14 +99,14 @@ function App() {
         </aside>
         <section className="panel-center">
           <div className="jarvis-section">
-            <JarvisOrb isListening={isListening} isThinking={isThinking} />
+            <JarvisOrb isListening={isListening} isThinking={chatMutation.isPending} />
           </div>
           <ChatPanel
             messages={messages}
             input={input}
             setInput={setInput}
             onSend={handleSend}
-            isThinking={isThinking}
+            isThinking={chatMutation.isPending}
           />
         </section>
         <aside className="panel-right">

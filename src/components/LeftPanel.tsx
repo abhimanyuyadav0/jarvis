@@ -1,6 +1,11 @@
 import { useRef, useState, useEffect } from 'react'
 import VoiceButton from './VoiceButton'
-import { faceAnalyzeBase64, uploadDocument, listDocuments } from '../lib/api'
+import {
+  useFaceAnalyzeMutation,
+  useDocumentsList,
+  useDocumentUpload,
+  useDocumentQuery,
+} from '../api'
 import './LeftPanel.css'
 
 interface LeftPanelProps {
@@ -17,11 +22,12 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [isCamActive, setIsCamActive] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [docs, setDocs] = useState<{ id: string; filename: string }[]>([])
   const [docQuestion, setDocQuestion] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [isAskingDocs, setIsAskingDocs] = useState(false)
+
+  const faceMutation = useFaceAnalyzeMutation()
+  const { data: docs = [] } = useDocumentsList()
+  const uploadMutation = useDocumentUpload()
+  const queryMutation = useDocumentQuery()
 
   useEffect(() => {
     return () => {
@@ -46,7 +52,7 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
       setIsCamActive(true)
       setCapturedImage(null)
       onLog?.('event', 'Camera started')
-    } catch (err) {
+    } catch {
       onLog?.('system', 'Camera error: access denied or unavailable')
     }
   }
@@ -87,57 +93,38 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
       onLog?.('system', 'Start camera or capture a frame first')
       return
     }
-    setIsAnalyzing(true)
     try {
-      const res = await faceAnalyzeBase64(b64)
+      const res = await faceMutation.mutateAsync(b64)
       onLog?.('event', `Faces detected: ${res.face_count}`)
       if (res.recognized && res.name) {
-        onLog?.('event', `Recognized: ${res.name} (${(res.confidence * 100).toFixed(0)}%)`)
+        onLog?.('event', `Recognized: ${res.name} (${((res.confidence ?? 0) * 100).toFixed(0)}%)`)
       }
     } catch {
       onLog?.('system', 'Face analysis failed. Is backend running?')
-    } finally {
-      setIsAnalyzing(false)
     }
   }
-
-  const loadDocs = async () => {
-    try {
-      const { documents } = await listDocuments()
-      setDocs(documents || [])
-    } catch {
-      setDocs([])
-    }
-  }
-  useEffect(() => { loadDocs() }, [])
 
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setIsUploading(true)
     try {
-      await uploadDocument(file)
+      await uploadMutation.mutateAsync(file)
       onLog?.('event', `Uploaded: ${file.name}`)
-      loadDocs()
     } catch (err) {
       onLog?.('system', err instanceof Error ? err.message : 'Upload failed')
     } finally {
-      setIsUploading(false)
       e.target.value = ''
     }
   }
 
   const askDocs = async () => {
     if (!docQuestion.trim()) return
-    setIsAskingDocs(true)
     try {
-      const { answer } = await (await import('../lib/api')).queryDocuments(docQuestion)
+      const { answer } = await queryMutation.mutateAsync(docQuestion)
       onDocAnswer?.(answer)
       setDocQuestion('')
     } catch {
       onLog?.('system', 'Document query failed. Is backend running?')
-    } finally {
-      setIsAskingDocs(false)
     }
   }
 
@@ -182,10 +169,10 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
         </button>
         <button
           onClick={analyzeFace}
-          disabled={(!capturedImage && !isCamActive) || isAnalyzing}
+          disabled={(!capturedImage && !isCamActive) || faceMutation.isPending}
           className="btn-action"
         >
-          {isAnalyzing ? 'Analyzing...' : 'Analyze Face'}
+          {faceMutation.isPending ? 'Analyzing...' : 'Analyze Face'}
         </button>
         {onListeningChange && onTranscript && (
           <VoiceButton
@@ -207,9 +194,9 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
         <button
           className="btn-action"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
+          disabled={uploadMutation.isPending}
         >
-          {isUploading ? 'Uploading...' : 'Upload PDF/TXT/DOCX'}
+          {uploadMutation.isPending ? 'Uploading...' : 'Upload PDF/TXT/DOCX'}
         </button>
         {docs.length > 0 && (
           <>
@@ -221,7 +208,10 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
                 placeholder="Ask about documents..."
                 onKeyDown={e => e.key === 'Enter' && askDocs()}
               />
-              <button onClick={askDocs} disabled={isAskingDocs || !docQuestion.trim()}>
+              <button
+                onClick={askDocs}
+                disabled={queryMutation.isPending || !docQuestion.trim()}
+              >
                 Ask
               </button>
             </div>
