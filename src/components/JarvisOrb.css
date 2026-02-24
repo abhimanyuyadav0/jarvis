@@ -1,0 +1,124 @@
+.jarvis-orb {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring {
+  position: absolute;
+  border: 1px solid var(--jarvis-border);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: ring-pulse 4s ease-in-out infinite;
+}
+
+.ring-1 {
+  width: 120%;
+  height: 120%;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 140%;
+  height: 140%;
+  animation-delay: 0.5s;
+}
+
+.ring-3 {
+  width: 160%;
+  height: 160%;
+  animation-delay: 1s;
+}
+
+@keyframes ring-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+.orb-core {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(0, 212, 255, 0.9),
+    rgba(0, 168, 204, 0.6)
+  );
+  box-shadow:
+    0 0 30px var(--jarvis-glow),
+    inset 0 0 20px rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: core-float 3s ease-in-out infinite;
+}
+
+.orb-inner {
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.orb-glow {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 212, 255, 0.15) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+@keyframes core-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.jarvis-orb.listening .orb-core {
+  animation: listening-pulse 0.5s ease-in-out infinite;
+  box-shadow: 0 0 50px var(--jarvis-glow), 0 0 80px var(--jarvis-glow);
+}
+
+.jarvis-orb.thinking .orb-core {
+  animation: thinking-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 40px var(--jarvis-glow);
+}
+
+@keyframes listening-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 40px var(--jarvis-glow);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 60px var(--jarvis-glow);
+  }
+}

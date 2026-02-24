@@ -1,0 +1,38 @@
+.voice-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--jarvis-panel);
+  border: 1px solid var(--jarvis-border);
+  color: var(--jarvis-cyan);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.voice-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--jarvis-cyan);
+  box-shadow: 0 0 20px var(--jarvis-glow);
+}
+
+.voice-btn.active {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: var(--jarvis-cyan);
+  box-shadow: 0 0 25px var(--jarvis-glow);
+  animation: voice-pulse 1s ease-in-out infinite;
+}
+
+.voice-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes voice-pulse {
+  0%, 100% { box-shadow: 0 0 25px var(--jarvis-glow); }
+  50% { box-shadow: 0 0 40px var(--jarvis-glow); }
+}
