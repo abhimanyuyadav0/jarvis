@@ -77,6 +77,10 @@ function App() {
             isListening={isListening}
             onListeningChange={setIsListening}
             onTranscript={handleVoiceTranscript}
+            onDocAnswer={(answer) => {
+              setMessages(m => [...m, { role: 'assistant', content: `📄 ${answer}` }])
+              addLog('assistant', answer.slice(0, 80) + (answer.length > 80 ? '...' : ''))
+            }}
           />
         </aside>
         <section className="panel-center">
