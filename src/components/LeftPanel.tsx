@@ -21,11 +21,20 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
     }
   }, [stream])
 
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !stream) return
+    video.srcObject = stream
+    video.play().catch(() => {})
+  }, [stream, isCamActive])
+
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      })
       setStream(mediaStream)
-      if (videoRef.current) videoRef.current.srcObject = mediaStream
       setIsCamActive(true)
       setCapturedImage(null)
       onLog?.('event', 'Camera started')
