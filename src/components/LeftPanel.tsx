@@ -16,9 +16,11 @@ interface LeftPanelProps {
   onDocAnswer?: (answer: string) => void
   startVoiceListeningRef?: React.MutableRefObject<(() => void) | null>
   cancelSpeakingRef?: React.MutableRefObject<(() => void) | null>
+  voiceGender?: 'male' | 'female'
+  onVoiceGenderChange?: (gender: 'male' | 'female') => void
 }
 
-export default function LeftPanel({ onLog, isListening = false, onListeningChange, onTranscript, onDocAnswer, startVoiceListeningRef }: LeftPanelProps) {
+export default function LeftPanel({ onLog, isListening = false, onListeningChange, onTranscript, onDocAnswer, startVoiceListeningRef, cancelSpeakingRef, voiceGender = 'male', onVoiceGenderChange }: LeftPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
@@ -177,13 +179,38 @@ export default function LeftPanel({ onLog, isListening = false, onListeningChang
           {faceMutation.isPending ? 'Analyzing...' : 'Analyze Face'}
         </button>
         {onListeningChange && onTranscript && (
-          <VoiceButton
-            isListening={isListening}
-            onListeningChange={onListeningChange}
-            onTranscript={onTranscript}
-            startListeningRef={startVoiceListeningRef}
-            cancelSpeakingRef={cancelSpeakingRef}
-          />
+          <div className="voice-controls">
+            {onVoiceGenderChange && (
+              <div className="voice-options">
+                <span className="voice-options-label" title="Auto language (En/Hi)">Auto</span>
+                <div className="voice-gender-toggle">
+                  <button
+                    type="button"
+                    className={voiceGender === 'male' ? 'active' : ''}
+                    onClick={() => onVoiceGenderChange('male')}
+                    title="Male voice"
+                  >
+                    ♂
+                  </button>
+                  <button
+                    type="button"
+                    className={voiceGender === 'female' ? 'active' : ''}
+                    onClick={() => onVoiceGenderChange('female')}
+                    title="Female voice"
+                  >
+                    ♀
+                  </button>
+                </div>
+              </div>
+            )}
+            <VoiceButton
+              isListening={isListening}
+              onListeningChange={onListeningChange}
+              onTranscript={onTranscript}
+              startListeningRef={startVoiceListeningRef}
+              cancelSpeakingRef={cancelSpeakingRef}
+            />
+          </div>
         )}
       </div>
       <div className="documents-section">

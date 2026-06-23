@@ -1,0 +1,83 @@
+.jarvis-avatar-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jarvis-avatar-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.jarvis-avatar-rings .avatar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--jarvis-border);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: avatar-ring-pulse 4s ease-in-out infinite;
+}
+
+.jarvis-avatar-rings .ring-1 {
+  width: 120%;
+  height: 120%;
+}
+
+.jarvis-avatar-rings .ring-2 {
+  width: 140%;
+  height: 140%;
+  animation-delay: 0.5s;
+}
+
+.jarvis-avatar-rings .ring-3 {
+  width: 160%;
+  height: 160%;
+  animation-delay: 1s;
+}
+
+.jarvis-avatar-rings.listening .avatar-ring {
+  border-color: var(--jarvis-cyan);
+  box-shadow: 0 0 12px var(--jarvis-glow);
+}
+
+.jarvis-avatar-rings.speaking .avatar-ring {
+  border-color: #ffaa00;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.6);
+  animation: avatar-ring-speak 1.2s ease-in-out infinite;
+}
+
+.jarvis-avatar-rings.speaking .ring-2 {
+  animation-delay: 0.2s;
+}
+
+.jarvis-avatar-rings.speaking .ring-3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes avatar-ring-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+@keyframes avatar-ring-speak {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+    opacity: 0.9;
+  }
+}

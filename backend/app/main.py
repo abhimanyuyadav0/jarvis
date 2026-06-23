@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, chat, face, documents
+from app.api import auth, chat, face, documents, tts
 from app.config import APP_VERSION
 
 app = FastAPI(
@@ -22,6 +22,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(face.router, prefix="/api/face", tags=["face"])
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+app.include_router(tts.router, prefix="/api/tts", tags=["tts"])
 
 
 @app.get("/")

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from openai import APIConnectionError, AuthenticationError, RateLimitError
 
 from app.auth.deps import get_current_user
 from app.config import OPENAI_API_KEY
@@ -21,5 +22,20 @@ async def chat_message(
     try:
         response = await chat_service.chat(messages)
         return {"content": response}
+    except RateLimitError:
+        raise HTTPException(
+            status_code=429,
+            detail="OpenAI quota exceeded. Add billing or credits at platform.openai.com.",
+        )
+    except AuthenticationError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid OpenAI API key. Check OPENAI_API_KEY in backend/.env.",
+        )
+    except APIConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not reach OpenAI. Check your network connection and try again.",
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

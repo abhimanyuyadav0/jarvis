@@ -32,13 +32,15 @@ export default function VoiceButton({ isListening, onListeningChange, onTranscri
     const recognition = new SpeechRecognitionClass()
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = 'en-US'
+    recognition.lang = 'en-IN'
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const last = event.results.length - 1
-      const transcript = event.results[last][0].transcript
-      if (event.results[last].isFinal && transcript.trim()) {
-        onTranscript(transcript.trim())
+      const result = event.results[last]
+      const transcript = result[0].transcript.trim()
+      const confidence = result[0].confidence ?? 1
+      if (result.isFinal && transcript.length >= 3 && confidence > 0.25) {
+        onTranscript(transcript)
       }
     }
 
