@@ -4,3 +4,6 @@ node_modules
 backend/venv
 backend/.env
 backend/data/
+dist
+.vite
+out

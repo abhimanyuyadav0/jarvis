@@ -6,7 +6,7 @@
   border: 1px solid var(--jarvis-border);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 30px rgba(232, 184, 79, 0.1);
 }
 
 .left-panel .panel-header {
@@ -28,7 +28,7 @@
 .feed-area {
   flex: 1;
   min-height: 120px;
-  background: rgba(0, 20, 40, 0.6);
+  background: rgba(18, 13, 6, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +48,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  color: rgba(0, 212, 255, 0.5);
+  color: rgba(232, 184, 79, 0.5);
   font-size: 0.9rem;
 }
 
@@ -73,14 +73,14 @@
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   border: 1px solid var(--jarvis-border);
-  background: rgba(0, 20, 40, 0.8);
+  background: rgba(18, 13, 6, 0.8);
   color: var(--jarvis-cyan);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-buttons button:hover:not(:disabled) {
-  background: rgba(0, 212, 255, 0.15);
+  background: rgba(232, 184, 79, 0.15);
   border-color: var(--jarvis-cyan);
   box-shadow: 0 0 15px var(--jarvis-glow);
 }
@@ -92,7 +92,7 @@
 
 .action-buttons .btn-start {
   border-color: var(--jarvis-cyan);
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(232, 184, 79, 0.1);
 }
 
 .action-buttons .btn-stop {
@@ -140,7 +140,7 @@
 
 .lang-toggle button.active,
 .voice-gender-toggle button.active {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(232, 184, 79, 0.2);
   border-color: var(--jarvis-cyan);
 }
 
@@ -176,7 +176,7 @@
 .doc-ask input {
   flex: 1;
   padding: 0.5rem;
-  background: rgba(0, 20, 40, 0.8);
+  background: rgba(18, 13, 6, 0.8);
   border: 1px solid var(--jarvis-border);
   color: var(--jarvis-cyan);
   font-size: 0.85rem;

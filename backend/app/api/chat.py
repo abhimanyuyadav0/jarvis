@@ -19,7 +19,7 @@ async def chat_message(
             detail="Anthropic API key not configured. Set ANTHROPIC_API_KEY in .env",
         )
     try:
-        response = await chat_service.chat(messages)
+        response = await chat_service.chat(messages, current_user["user_id"])
         return {"content": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

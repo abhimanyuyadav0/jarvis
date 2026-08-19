@@ -1,0 +1,30 @@
+import type { ConfigEnv, UserConfig } from 'vite'
+import { defineConfig, mergeConfig } from 'vite'
+import { getBuildConfig, getBuildDefine, external, pluginHotRestart } from './vite.base.config'
+
+export default defineConfig((env) => {
+  const forgeEnv = env as ConfigEnv<'build'>
+  const { forgeConfigSelf } = forgeEnv
+  const define = getBuildDefine(forgeEnv)
+  const config: UserConfig = {
+    build: {
+      lib: {
+        entry: forgeConfigSelf.entry!,
+        // .cjs, not .js — the root package.json is "type": "module", so a plain
+        // .js file here would be parsed as ESM and break the CJS require() output.
+        fileName: () => '[name].cjs',
+        formats: ['cjs'],
+      },
+      rollupOptions: {
+        external,
+      },
+    },
+    plugins: [pluginHotRestart('restart')],
+    define,
+    resolve: {
+      mainFields: ['module', 'jsnext:main', 'jsnext'],
+    },
+  }
+
+  return mergeConfig(getBuildConfig(forgeEnv), config)
+})

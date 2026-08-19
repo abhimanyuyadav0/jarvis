@@ -9,26 +9,14 @@ export interface AuthUser {
 
 export function useAuthRegister() {
   return useMutation({
-    mutationFn: ({ image, name }: { image: string; name?: string }) =>
-      apiClient.authRegister(image, name),
-  })
-}
-
-export function useAuthRegisterFace() {
-  return useMutation({
-    mutationFn: (image: string) => apiClient.authRegisterFace(image),
-  })
-}
-
-export function useAuthRegisterComplete() {
-  return useMutation({
-    mutationFn: ({ userId, name }: { userId: string; name?: string }) =>
-      apiClient.authRegisterComplete(userId, name),
+    mutationFn: ({ email, password, name }: { email: string; password: string; name?: string }) =>
+      apiClient.authRegister(email, password, name),
   })
 }
 
 export function useAuthLogin() {
   return useMutation({
-    mutationFn: (image: string) => apiClient.authLogin(image),
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      apiClient.authLogin(email, password),
   })
 }

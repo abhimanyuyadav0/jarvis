@@ -78,8 +78,7 @@ jarvis/
     │   ├── VoiceButton.css
     │   ├── ChatPanel.tsx      # Conversation UI
     │   └── ChatPanel.css
-    └── lib/
-        └── ai.ts              # OpenAI / mock AI logic
+    └── api/                   # Backend client + React Query hooks
 ```
 
 ---
@@ -107,8 +106,7 @@ jarvis/
 
 ### 4. AI Integration
 
-- **With API key**: Uses OpenAI GPT-3.5-turbo
-- **Without API key**: Uses built-in mock responses
+Chat requests go to the backend, which calls Claude (`claude-opus-5`) via the Anthropic API. Requires `ANTHROPIC_API_KEY` set in `backend/.env`.
 
 ---
 

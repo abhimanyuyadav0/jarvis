@@ -33,3 +33,13 @@ interface SpeechRecognition extends EventTarget {
   start(): void
   stop(): void
 }
+
+interface JarvisElectronBridge {
+  /** Bring the Electron window to the front. No-op outside Electron. */
+  focusWindow: () => void
+}
+
+interface Window {
+  /** Present only when running inside the Electron shell (see electron/preload.ts). */
+  jarvis?: JarvisElectronBridge
+}

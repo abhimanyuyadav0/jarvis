@@ -136,7 +136,7 @@ class DocService:
                 client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
                 response = await client.messages.create(
                     model="claude-opus-5",
-                    system="Answer based only on the context. Say 'I don't know' if not found.",
+                    system="Answer based only on the context. Say 'I don't know' if not found. Plain text only, no markdown — the answer is shown in a plain-text chat bubble.",
                     messages=[{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}],
                     max_tokens=500,
                 )

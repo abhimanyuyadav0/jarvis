@@ -6,7 +6,7 @@
   border: 1px solid var(--jarvis-border);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 30px rgba(232, 184, 79, 0.1);
 }
 
 .logs-panel .panel-header {
@@ -36,13 +36,13 @@
 }
 
 .logs-empty {
-  color: rgba(0, 212, 255, 0.4);
+  color: rgba(232, 184, 79, 0.4);
   font-style: italic;
 }
 
 .log-entry {
   padding: 0.35rem 0;
-  border-bottom: 1px solid rgba(0, 212, 255, 0.08);
+  border-bottom: 1px solid rgba(232, 184, 79, 0.08);
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -50,7 +50,7 @@
 }
 
 .log-time {
-  color: rgba(0, 212, 255, 0.6);
+  color: rgba(232, 184, 79, 0.6);
   flex-shrink: 0;
 }
 
@@ -63,13 +63,13 @@
 }
 
 .log-entry.user .log-badge {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(232, 184, 79, 0.2);
   color: var(--jarvis-cyan);
 }
 
 .log-entry.assistant .log-badge {
-  background: rgba(0, 168, 204, 0.2);
-  color: #00a8cc;
+  background: rgba(79, 214, 196, 0.2);
+  color: var(--jarvis-teal);
 }
 
 .log-entry.system .log-badge {
@@ -78,12 +78,12 @@
 }
 
 .log-entry.event .log-badge {
-  background: rgba(255, 193, 7, 0.2);
-  color: #ffc107;
+  background: rgba(255, 140, 66, 0.2);
+  color: #ff8c42;
 }
 
 .log-msg {
   flex: 1;
   word-break: break-word;
-  color: rgba(0, 212, 255, 0.9);
+  color: rgba(232, 184, 79, 0.9);
 }

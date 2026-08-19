@@ -59,8 +59,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle at 30% 30%,
-    rgba(0, 212, 255, 0.9),
-    rgba(0, 168, 204, 0.6)
+    rgba(232, 184, 79, 0.9),
+    rgba(184, 135, 58, 0.6)
   );
   box-shadow:
     0 0 30px var(--jarvis-glow),
@@ -86,7 +86,7 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(0, 212, 255, 0.15) 0%,
+    rgba(232, 184, 79, 0.15) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -123,10 +123,10 @@
   }
 }
 
-/* Speaking state: yellow-orange rings */
+/* Speaking state: teal rings, contrasting against the gold idle theme */
 .jarvis-orb.speaking .ring {
-  border-color: #ffaa00;
-  box-shadow: 0 0 12px rgba(255, 170, 0, 0.6);
+  border-color: var(--jarvis-teal);
+  box-shadow: 0 0 12px var(--jarvis-teal-glow);
   animation: ring-speak 1.2s ease-in-out infinite;
 }
 
@@ -142,17 +142,17 @@
   animation: core-speak 0.8s ease-in-out infinite;
   background: radial-gradient(
     circle at 30% 30%,
-    rgba(255, 180, 80, 0.9),
-    rgba(255, 140, 40, 0.6)
+    rgba(110, 224, 209, 0.9),
+    rgba(47, 166, 147, 0.6)
   );
-  box-shadow: 0 0 40px rgba(255, 170, 0, 0.6), 0 0 60px rgba(255, 120, 0, 0.4);
+  box-shadow: 0 0 40px var(--jarvis-teal-glow), 0 0 60px rgba(47, 166, 147, 0.4);
 }
 
 .jarvis-orb.speaking .orb-glow {
   background: radial-gradient(
     circle,
-    rgba(255, 170, 0, 0.2) 0%,
-    rgba(255, 120, 0, 0.08) 40%,
+    rgba(79, 214, 196, 0.2) 0%,
+    rgba(47, 166, 147, 0.08) 40%,
     transparent 70%
   );
 }
@@ -161,12 +161,12 @@
   0%, 100% {
     transform: scale(1);
     opacity: 0.4;
-    border-color: #ffaa00;
+    border-color: var(--jarvis-teal);
   }
   50% {
     transform: scale(1.15);
     opacity: 0.9;
-    border-color: #ff6600;
+    border-color: var(--jarvis-teal-dim);
   }
 }
 

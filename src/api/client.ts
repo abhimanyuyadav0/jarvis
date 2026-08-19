@@ -78,6 +78,21 @@ export const apiClient = {
     return res.json()
   },
 
+  async systemStats() {
+    const res = await fetch(`${API_BASE}/api/system/stats`, {
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+    })
+    if (!res.ok) {
+      handleUnauthorized(res)
+      throw new Error('Failed to fetch system stats')
+    }
+    return res.json() as Promise<{
+      cpu_percent: number
+      memory: { total_gb: number; used_gb: number; percent: number }
+      disk: { total_gb: number; used_gb: number; free_gb: number; percent: number }
+    }>
+  },
+
   async listDocuments() {
     const res = await fetch(`${API_BASE}/api/documents/list`, {
       headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
@@ -89,50 +104,11 @@ export const apiClient = {
     return res.json()
   },
 
-  async authValidateFace(imageBase64: string) {
-    const res = await fetch(`${API_BASE}/api/auth/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageBase64 }),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Validation failed')
-    }
-    return res.json()
-  },
-
-  async authRegisterFace(imageBase64: string) {
-    const res = await fetch(`${API_BASE}/api/auth/register-face`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageBase64 }),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Registration failed')
-    }
-    return res.json()
-  },
-
-  async authRegisterComplete(userId: string, name?: string) {
-    const res = await fetch(`${API_BASE}/api/auth/register-complete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, name: name || '' }),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Registration failed')
-    }
-    return res.json()
-  },
-
-  async authRegister(imageBase64: string, name?: string) {
+  async authRegister(email: string, password: string, name?: string) {
     const res = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageBase64, name: name || '' }),
+      body: JSON.stringify({ email, password, name: name || '' }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
@@ -141,11 +117,11 @@ export const apiClient = {
     return res.json()
   },
 
-  async authLogin(imageBase64: string) {
+  async authLogin(email: string, password: string) {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageBase64 }),
+      body: JSON.stringify({ email, password }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))

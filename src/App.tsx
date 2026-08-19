@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import JarvisOrb from './components/JarvisOrb'
+import HudFrame from './components/HudFrame'
 import ChatPanel from './components/ChatPanel'
 import LeftPanel from './components/LeftPanel'
 import LogsPanel, { type LogEntry } from './components/LogsPanel'
+import SystemPanel from './components/SystemPanel'
 import AuthScreen from './components/AuthScreen'
 import { useChatMutation, type Message } from './api'
 import { setOnUnauthorized } from './api'
@@ -32,13 +34,61 @@ function MainApp() {
   const logIdRef = useRef(0)
   const startVoiceListeningRef = useRef<(() => void) | null>(null)
   const cancelSpeakingRef = useRef<(() => void) | null>(null)
+  const sessionStartRef = useRef(Date.now())
+  const [uptime, setUptime] = useState('00:00:00')
 
   const chatMutation = useChatMutation()
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+      const h = String(Math.floor(elapsed / 3600)).padStart(2, '0')
+      const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0')
+      const s = String(elapsed % 60).padStart(2, '0')
+      setUptime(`${h}:${m}:${s}`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     cancelSpeakingRef.current = () => {
       if ('speechSynthesis' in window) window.speechSynthesis.cancel()
       setIsSpeaking(false)
+    }
+  }, [])
+
+  // Wake-word: when the backend hears the wake phrase, jump straight into voice
+  // listening the same way clicking the mic button does.
+  useEffect(() => {
+    if (!useBackend) return
+    const wsUrl = import.meta.env.VITE_API_URL.replace(/^http/, 'ws') + '/ws/wake'
+    let socket: WebSocket | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+
+    const connect = () => {
+      socket = new WebSocket(wsUrl)
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.event === 'wake') {
+            window.jarvis?.focusWindow()
+            startVoiceListeningRef.current?.()
+          }
+        } catch {
+          // ignore malformed messages
+        }
+      }
+      socket.onclose = () => {
+        reconnectTimer = setTimeout(connect, 3000)
+      }
+    }
+    connect()
+
+    return () => {
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      socket?.close()
     }
   }, [])
 
@@ -140,6 +190,14 @@ function MainApp() {
     }
   }, [handleSend, addLog])
 
+  const hudStatus = isSpeaking
+    ? 'SPEAKING'
+    : chatMutation.isPending
+      ? 'THINKING'
+      : isListening
+        ? 'LISTENING'
+        : 'IDLE'
+
   return (
     <div className="app">
       <div className="grid-bg" />
@@ -176,7 +234,14 @@ function MainApp() {
         </aside>
         <section className="panel-center">
           <div className="jarvis-section">
-            <JarvisOrb isListening={isListening} isThinking={chatMutation.isPending} isSpeaking={isSpeaking} />
+            <HudFrame
+              status={hudStatus}
+              mode={useBackend ? 'LIVE' : 'DEMO'}
+              sessionLabel={user?.name ?? 'GUEST'}
+              uptime={uptime}
+            >
+              <JarvisOrb isListening={isListening} isThinking={chatMutation.isPending} isSpeaking={isSpeaking} />
+            </HudFrame>
           </div>
           <ChatPanel
             messages={messages}
@@ -187,6 +252,7 @@ function MainApp() {
           />
         </section>
         <aside className="panel-right">
+          <SystemPanel enabled={useBackend} />
           <LogsPanel logs={logs} />
         </aside>
       </main>

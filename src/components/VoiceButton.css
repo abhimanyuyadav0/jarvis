@@ -15,13 +15,13 @@
 }
 
 .voice-btn:hover {
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(232, 184, 79, 0.1);
   border-color: var(--jarvis-cyan);
   box-shadow: 0 0 20px var(--jarvis-glow);
 }
 
 .voice-btn.active {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(232, 184, 79, 0.2);
   border-color: var(--jarvis-cyan);
   box-shadow: 0 0 25px var(--jarvis-glow);
   animation: voice-pulse 1s ease-in-out infinite;

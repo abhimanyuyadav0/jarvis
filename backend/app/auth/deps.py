@@ -36,7 +36,4 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
 
     user = users[token]
-    if user.get("pending_name"):
-        raise HTTPException(status_code=401, detail="Registration incomplete. Complete registration first.")
-
     return {"user_id": token, "name": user.get("name", "User"), "token": token}
