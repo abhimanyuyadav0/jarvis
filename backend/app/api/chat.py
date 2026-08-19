@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth.deps import get_current_user
-from app.config import OPENAI_API_KEY
+from app.config import ANTHROPIC_API_KEY
 from app.services.chat_service import chat_service
 
 router = APIRouter()
@@ -13,10 +13,10 @@ async def chat_message(
     current_user: dict = Depends(get_current_user),
 ):
     """Send messages to JARVIS and get AI response."""
-    if not OPENAI_API_KEY:
+    if not ANTHROPIC_API_KEY:
         raise HTTPException(
             status_code=503,
-            detail="OpenAI API key not configured. Set OPENAI_API_KEY in .env",
+            detail="Anthropic API key not configured. Set ANTHROPIC_API_KEY in .env",
         )
     try:
         response = await chat_service.chat(messages)

@@ -129,18 +129,18 @@ class DocService:
         return {"answer": answer, "sources": sources, "context": context[:500]}
 
     async def _generate_answer(self, question: str, context: str) -> str:
-        if os.getenv("OPENAI_API_KEY"):
+        if os.getenv("ANTHROPIC_API_KEY"):
             try:
-                from langchain_openai import ChatOpenAI
-                from langchain_core.messages import HumanMessage, SystemMessage
+                from anthropic import AsyncAnthropic
 
-                llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
-                msgs = [
-                    SystemMessage(content="Answer based only on the context. Say 'I don't know' if not found."),
-                    HumanMessage(content=f"Context:\n{context}\n\nQuestion: {question}"),
-                ]
-                resp = await llm.ainvoke(msgs)
-                return resp.content
+                client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+                response = await client.messages.create(
+                    model="claude-opus-5",
+                    system="Answer based only on the context. Say 'I don't know' if not found.",
+                    messages=[{"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}],
+                    max_tokens=500,
+                )
+                return next((b.text for b in response.content if b.type == "text"), "")
             except Exception:
                 pass
         return f"Relevant excerpt from documents:\n\n{context[:400]}..."

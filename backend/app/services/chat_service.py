@@ -1,6 +1,6 @@
 import os
 
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 
 from app.config import APP_VERSION, CREATOR_LOCATION, CREATOR_NAME, CREATOR_ROLE
 
@@ -16,7 +16,7 @@ SYSTEM_PROMPT = _system_prompt
 
 class ChatService:
     def __init__(self):
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     async def chat(self, messages: list[dict]) -> str:
         formatted = []
@@ -25,12 +25,13 @@ class ChatService:
             content = m.get("content", "")
             formatted.append({"role": role, "content": content})
 
-        response = await self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}, *formatted],
+        response = await self.client.messages.create(
+            model="claude-opus-5",
+            system=SYSTEM_PROMPT,
+            messages=formatted,
             max_tokens=500,
         )
-        return response.choices[0].message.content or ""
+        return next((b.text for b in response.content if b.type == "text"), "")
 
 
 chat_service = ChatService()
