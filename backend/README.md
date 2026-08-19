@@ -25,10 +25,10 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-Add your OpenAI API key for chat and document Q&A:
+Add your Anthropic API key for chat and document Q&A:
 
 ```
-OPENAI_API_KEY=sk-your-key-here
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
 ## Run

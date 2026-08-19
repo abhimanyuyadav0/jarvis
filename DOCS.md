@@ -15,7 +15,7 @@ Yes, building a Jarvis-like assistant with a cool UI is possible. This project i
 | **Futuristic UI** | Dark theme, cyan glow, animated orb, grid background | Done |
 | **Text chat** | Type messages and receive AI responses | Done |
 | **Voice input** | Speak to Jarvis using browser speech-to-text | Done |
-| **AI responses** | OpenAI GPT integration (or mock mode) | Done |
+| **AI responses** | Claude (Anthropic) integration via the backend | Done |
 | **Responsive layout** | Works on desktop and mobile | Done |
 
 ---
@@ -47,18 +47,11 @@ npm run preview
 
 ## Configuration
 
-### OpenAI API (Optional)
+### Backend + Claude API
 
-For real AI responses:
+Chat, face auth, and document Q&A are handled by the Python backend, not the frontend directly. See [backend/README.md](./backend/README.md) to set it up and add `ANTHROPIC_API_KEY`. The frontend only needs `VITE_API_URL` pointing at it (see `.env.example`).
 
-1. Copy `.env.example` to `.env`
-2. Add your OpenAI API key:
-   ```
-   VITE_OPENAI_API_KEY=sk-your-key-here
-   ```
-3. Restart the dev server
-
-Without an API key, the app uses mock responses so you can try the UI and voice features.
+Without the backend running, chat, auth, and document features will fail — the frontend has no standalone demo/mock mode.
 
 ---
 
